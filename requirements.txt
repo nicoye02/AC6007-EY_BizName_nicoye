@@ -11,6 +11,3 @@ google-generativeai==0.3.1
 
 # Environment Configuration
 python-dotenv==1.0.0
-
-# Utilities
-axios-compatible-json-handling  # 这种一般由 Flask 内置处理，不需额外包
