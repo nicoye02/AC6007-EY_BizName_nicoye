@@ -30,8 +30,8 @@ def analyze():
     
     return jsonify({
         "description": desc,
-        "labels": ai_result['labels'],
-        "reasoning": ai_result['reasoning']
+        "labels": ai_result.get('labels', []),
+        "sector": ai_result.get('reasoning', "Sector analysis unavailable")
     })
 
 def ai_semantic_labeling(description):

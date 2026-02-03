@@ -1,6 +1,7 @@
 import os
 import json
 import google.generativeai as genai
+import google.api_core.exceptions
 
 # 环境自适应逻辑
 try:

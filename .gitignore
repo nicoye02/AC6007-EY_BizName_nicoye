@@ -1,0 +1,4 @@
+# .gitignore 内容示例
+.env
+__pycache__/
+*.pyc
