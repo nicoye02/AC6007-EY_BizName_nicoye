@@ -1,13 +1,13 @@
 from flask import Flask, render_template, request, jsonify
 import pandas as pd
-from ai_engine import get_gemini_labels  # 用于调用大模型解决词义理解问题
-from scraper import get_business_description  # 自定义抓取模块
+from ai_engine import get_gemini_labels  # all LLM to solve word meaning understanding problems
+from scraper import get_business_description  # custom model fetched
 from dotenv import load_dotenv
-load_dotenv() # 这会自动读取 .env 文件里的 Key
+load_dotenv() # read API KEY in .env
 
 app = Flask(__name__)
 
-# 定义 EY 要求的技术领域 
+# define tech fields as required by EY 
 TECH_DOMAINS = [
     "Communications & connectivity", "Privacy & security", 
     "Blockchain", "Digital content management", 
@@ -21,12 +21,29 @@ def index():
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
-    url = request.json.get('url')
-    # 1. 抓取原始数据（解决表格和描述提取问题）
-    desc, table = get_business_description(url)
+    user_input = request.json.get('url', '').strip()
+
+    # 1. identify the input as URL or enterprise name
+    if user_input.startswith('http'):
+        target_url = user_input
+        desc, _ = get_business_description(target_url)
+    else:
+        # if its enterprise name, build Wikipedia link (steady and open-source)
+        # 例如: "NVIDIA" -> "https://en.wikipedia.org/wiki/NVIDIA"
+        target_url = f"https://en.wikipedia.org/wiki/{user_input.replace(' ', '_')}"
+        desc, _ = get_business_description(target_url)
     
-    # 2. 使用 AI 进行语义标注（解决“无法理解词义”痛点 [cite: 1, 3]）
-    ai_result = get_gemini_labels(desc)
+    # 2. if failed to fetch model（i.e., Wikipedia does not include the link），then enable LLM generate by itself
+    if not desc or "failed" in desc.lower() or len(desc) < 50:
+        desc = f"Internal Knowledge Retrieval: Generating tech profile for {user_input}..."
+        
+        # give LLM Prompt to solve
+        ai_input = f"Based on your knowledge, describe the core business and tech sectors of {user_input}."
+    else:
+        ai_input = desc
+    
+    # 2. Using AI for semantic annotation
+    ai_result = get_gemini_labels(ai_input)
     
     return jsonify({
         "description": desc,
@@ -36,12 +53,12 @@ def analyze():
 
 def ai_semantic_labeling(description):
     """
-    使用 AI 进行互斥且完备的分类 [cite: 18, 20]
+    Use AI for mutually exclusive and complete classification
     """
-    prompt = f"分析以下业务描述，从{TECH_DOMAINS}中选出最匹配的标签：{description}"
-    # 这里调用 OpenAI API
-    # response = openai.ChatCompletion.create(...)
-    return "Artificial intelligence" # 示例返回
+    prompt = f"Analyze the following business description, choose the most matching labels from{TECH_DOMAINS}: {description}"
+    # call Gemini API
+    # response = gemini.ChatCompletion.create(...)
+    return "Artificial intelligence" # example of return value
 
 if __name__ == '__main__':
     app.run(debug=True)
