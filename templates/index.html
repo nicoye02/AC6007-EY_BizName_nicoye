@@ -65,21 +65,21 @@
             const loading = document.getElementById('loading');
             const resultArea = document.getElementById('resultArea');
             
-            if (!name) return alert("请输入公司名称");
+            if (!name) return alert("Please enter company name");
 
-            // 显示加载动画
+            // Show loading animation
             loading.classList.remove('hidden');
             resultArea.classList.add('hidden');
 
             try {
-                // 向 Python Flask 后端发送请求 [cite: 56]
+                // send request to Python Flask back-end
                 const response = await axios.post('/analyze', { url: name });
                 const data = response.data;
 
-                // 填充抓取到的描述 [cite: 22]
+                // Fill in the fetched description
                 document.getElementById('descText').innerText = data.description;
                 
-                // 填充 AI 标签（解决无法理解词义的痛点）[cite: 1, 13]
+                // Fill in AI tags (to understand the meaning of words)
                 const container = document.getElementById('labelContainer');
                 container.innerHTML = ''; 
                 data.labels.forEach(label => {
@@ -91,7 +91,7 @@
 
                 document.getElementById('sectorText').innerText = data.sector;
 
-                // 隐藏加载，显示结果
+                // Hide loading, show results
                 loading.classList.add('hidden');
                 resultArea.classList.remove('hidden');
 
